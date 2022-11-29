@@ -11,38 +11,47 @@ module.exports = async function(fastify, opts) {
 
     fastify.get('/', async function(request, reply) {
         if (!request.user) return { error: 'Użytkownik niezalogowany!' };
+        let user = await User.findById( request.user.id );
+        if (user == null) return { error: 'Taki użytkownik nie istnieje!' };
+        let id = user.id;
+        let username = user.username;
+        let email = user.email;
         return {
-            id: request.user.id,
-            nick: request.user.nick,
-            email: request.user.email,
+            id,
+            username,
+            email,
         };
     });
 
-    fastify.put('/:username', async function(request, reply) {
+    fastify.put('/', async function(request, reply) {
         if (!request.user) return { error: 'Użytkownik niezalogowany!' };
-        let user = await User.findOne({ username: request.params.username });
+        let user = await User.findById( request.user.id );
         if (user == null) return { error: 'Taki użytkownik nie istnieje!' };
-        if (user.username != request.user.nick)
-            return { error: 'Nie możesz edytować tego użytkownika!' };
-        let username = request.params.username;
-        await User.findOneAndUpdate({
-            username
-        }, {
-            listed,
-            paste,
-            lang,
+        let username = request.body.username ?? request.user.nick;
+        let re = /\S+@\S+\.\S+/;
+        let email = request.user.email;
+        if(request.body.email && re.test(request.body.email))
+            email = request.body.email;
+        let password = request.body.password&&bcrypt.hashSync(request.body.password, bcrypt.genSaltSync(10));
+        // if(request.body.password){
+        //     const salt = bcrypt.genSaltSync(10);
+        //     password = bcrypt.hashSync(request.body.password, salt);
+        // }
+        await User.findByIdAndUpdate(
+            request.user.id, 
+        {
+            username,
+            email,
+            password
         });
-        return {reply: "Zmieniono użytkownik!", id}
+        return {reply: "Zmieniono dane użytkownika!", id}
     });
 
-    fastify.delete('/:username', async function(request, reply){
+    fastify.delete('/', async function(request, reply){
         if (!request.user) return { error: 'Użytkownik niezalogowany!' };
-        let post = await User.findOne({ username: request.params.username });
-        if (post == null) return { error: 'Taki użytkownik nie istnieje!' };
-        if (post.author != request.user.username)
-            return { error: 'Nie możesz edytować tego użytkownik!' };
-        let username = request.params.username;
-        await User.findOneAndRemove({username});
+        let user = await User.findById( request.user.id );
+        if (user == null) return { error: 'Taki użytkownik nie istnieje!' };
+        await User.findByIdAndRemove( request.user.id );
         return {reply: "Usunięto użytkownika!"}
     })
 };

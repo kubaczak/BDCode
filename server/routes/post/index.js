@@ -15,6 +15,22 @@ module.exports = async function(fastify, opts) {
         })
     );
 
+    fastify.get('/user/:username', async function(request, reply) {
+        let username = request.params.username;
+        const user = await User.findOne({username});
+        if(user == null) return {error: "Taki użytkownik nie istnieje!"};
+        let posts = await Post.find({author: user._id, listed: true});
+        return posts;
+    })
+
+    fastify.get('/user', async function(request, reply) {
+        if (!request.user) return { error: 'Użytkownik niezalogowany!' };
+        let user = await User.findById( request.user.id );
+        if (user == null) return { error: 'Taki użytkownik nie istnieje!' };
+        let posts = await Post.find({author: user._id});
+        return posts;
+    })
+
     fastify.get('/:id', async function(request, reply) {
         let post = await Post.findOne({ id: request.params.id });
         if (post == null) return { error: 'Taki wpis nie istnieje!' };
@@ -22,7 +38,7 @@ module.exports = async function(fastify, opts) {
         let stars = [];
         for (let i in post.starsUsers) {
             let u = await User.findById(post.starsUsers[i].toString());
-            stars.push(u ? u.username : 'none');
+            stars.push(u.username ?? 'none');
         }
         let author = await User.findById(post.author);
         return {
@@ -51,7 +67,7 @@ module.exports = async function(fastify, opts) {
             lang: lang,
         });
         await newPaste.save();
-        return { id: id };
+        return { id };
     });
 
     fastify.put('/:id', async function(request, reply) {
@@ -83,6 +99,6 @@ module.exports = async function(fastify, opts) {
             return { error: 'Nie możesz edytować tego wpisu!' };
         let id = request.params.id;
         await Post.findOneAndRemove({id});
-        return {reply: "Usunięto wpisu!", id}
+        return {reply: "Usunięto wpis!", id}
     })
 };
