@@ -13,6 +13,7 @@ module.exports = async function(fastify, opts) {
     } catch (e) {
         console.error(e);
     }
+
     // Do not touch the following lines
 
     // This loads all plugins defined in plugins

@@ -31,6 +31,16 @@ module.exports = async function(fastify, opts) {
         return posts;
     })
 
+    fastify.post('/:id/star', async function(request){
+        if (!request.user) return { error: 'Użytkownik niezalogowany!' };
+        let user = await User.findById( request.user.id );
+        if (user == null) return { error: 'Taki użytkownik nie istnieje!' };
+        let post = await Post.findOne({ id: request.params.id });
+        if (post == null) return { error: 'Taki wpis nie istnieje!' };
+        await post.update({stars: post.stars+1, starsUsers: post.starsUsers.push(user._id)})
+        return {reply: "Obserwujesz post!"}
+    })
+
     fastify.get('/:id', async function(request, reply) {
         let post = await Post.findOne({ id: request.params.id });
         if (post == null) return { error: 'Taki wpis nie istnieje!' };
