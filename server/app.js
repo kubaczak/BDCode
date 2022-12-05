@@ -3,6 +3,7 @@
 const path = require('path');
 const AutoLoad = require('@fastify/autoload');
 const mongoose = require('mongoose');
+const cors = require("@fastify/cors");
 
 module.exports = async function(fastify, opts) {
     // Place here your custom code!
@@ -14,6 +15,11 @@ module.exports = async function(fastify, opts) {
         console.error(e);
     }
 
+    fastify.register(cors, {
+        origin: 'http://localhost:5173',
+        credentials: true,
+        methods: '*'
+    })
     // Do not touch the following lines
 
     // This loads all plugins defined in plugins
