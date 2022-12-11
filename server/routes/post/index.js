@@ -23,7 +23,7 @@ module.exports = async function (fastify, opts) {
     let stars;
     if (request.user && request.user.nick == username) {
       posts = await Post.find({ author: user._id });
-      stars = await Post.find({ starsUsers: user._id }, { id });
+      stars = await Post.find({ starsUsers: user._id });
     } else {
       posts = await Post.find({ author: user._id, listed: true });
     }
